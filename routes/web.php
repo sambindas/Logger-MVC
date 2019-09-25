@@ -12,5 +12,9 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('support/auth/login');
 });
+
+Route::get('/home', 'DashboardController@Dashboard');
+
+Route::post('/login', 'LoginController@Login');
