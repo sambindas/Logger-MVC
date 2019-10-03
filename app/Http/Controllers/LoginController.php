@@ -1,9 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\User;
 use Illuminate\Http\Request;
-use App\Users;
 use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
@@ -12,7 +11,7 @@ class LoginController extends Controller
         $email = $request->email;
         $password = $request->password;
         
-        $users = DB::table('user')->where('password', $password)->where('email', $email)->get();
+        $users = User::where('password', $password)->where('email', $email)->get();
         
         if (!$users->count() > 0) {
             echo 0;

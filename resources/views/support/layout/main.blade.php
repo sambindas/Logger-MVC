@@ -29,7 +29,7 @@
     <!-- style css -->
     <link rel="stylesheet" type="text/css" media="screen" href="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.gallery.min.css" />
-    <link rel="stylesheet" href="{{asset('jquery.datetimepicker.css')}}">
+    <link rel="stylesheet" href="{{asset('datetimepicker/jquery.datetimepicker.css')}}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style type="text/css">
@@ -52,7 +52,7 @@
             position: fixed; //
         }
     </style>
-    <script type="text/javascript" src="{{('asset/ckeditor/ckeditor.js')}}"></script>
+    <script type="text/javascript" src="{{asset('ckeditor/ckeditor.js')}}"></script>
     <!-- modernizr css -->
 </head>
 
@@ -77,7 +77,7 @@
                             <li class="active">
                                 <a href="javascript:void(0)" aria-expanded="true"><i class="ti-dashboard"></i><span>Home</span></a>
                                 <ul class="collapse">
-                                    <li class="active"><a href="/home">Incident Log</a></li>
+                                    <li class="active"><a href="/">Incident Log</a></li>
                                     <li><a href="/charts">Analytics</a></li>
                                     <li><a href="/activity">Activity Log</a></li>
                                 </ul>

@@ -80,7 +80,7 @@
                     success: function(msg){
                         console.log(msg)
                         if (msg == 'support') {
-                            window.location.replace('home');
+                            window.location.replace('/');
                         } else if (msg == 'client') {
                             window.location.replace('clientindex.php');
                         } else {

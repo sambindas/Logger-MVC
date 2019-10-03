@@ -12,15 +12,19 @@
                                 <li><span>Incident Log</span></li>
                                 <li><span></span></li>
                                 <li><span></span></li>
-                                <a href="new.php" id="newissue" class="btn btn-primary btn-flat">New Incident</a>
-                                
+                                <a href="new" id="newissue" class="btn btn-primary btn-flat">New Incident</a>
+                                <li>
+                                @if(Session::get('msg'))
+                                <span class="alert alert-success">{{ Session::get('msg')}}</span>
+                                @endif
+                                </li>
                             </ul>
                         </div>
                     </div>
                     <div class="col-sm-6 clearfix">
                         <div class="user-profile pull-right">
                             <img class="avatar user-thumb" src="assets/images/author/avatar.png" alt="avatar">
-                            <h4 class="user-name dropdown-toggle" data-toggle="dropdown"><i class="fa fa-angle-down"></i></h4>
+                            <h4 class="user-name dropdown-toggle" data-toggle="dropdown">{{ Session::get('name')}}<i class="fa fa-angle-down"></i></h4>
                             <div class="dropdown-menu">
                                 <a data-toggle='modal' data-target="#switch" class="dropdown-item">Switch States</a>
                                 <a class="dropdown-item" href="settings.php">Settings</a>
@@ -186,7 +190,7 @@
     @section('js')
     
     <script type="text/javascript">
-        $(document).ready(function(){
+    $(document).ready(function(){
             jQuery('#datetimepicker2').datetimepicker({
                 format: 'Y-m-d',
                 timepicker:false,
@@ -506,13 +510,15 @@
     
       function fill_datatable(filter_status = '', filter_assign = '', logger = '', view = 0, datetimepicker1 = '', datetimepicker2 = '', search_table = '')
       {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
        $('#dataTable2').DataTable({
         
         "processing" : true,
         "pageLength": 25,
-        "columnDefs": [
-            { "searchable": true, "targets": 0 }
-          ],
         "serverSide" : true,
         "createdRow": function(row, data, index) {
 
@@ -554,7 +560,7 @@
         "order" : [],
         "searching" : false,
         "ajax" : {
-         url:"ajax/fetch.php",
+         url:"/fetchTable",
          type:"POST",
          data:{
           filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
@@ -579,7 +585,11 @@
             var datetimepicker2 = $('#datetimepicker2').val();
             var logger = $('#logger').val();
             var view = $('#view').val();
-
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
             $('#dataTable2').DataTable({
                 "processing" : true,
                 "pageLength": 25,

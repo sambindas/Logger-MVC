@@ -11,10 +11,18 @@
 |
 */
 
-Route::get('/', function () {
-    return view('support/auth/login');
-});
+Route::get('/', 'DashboardController@Dashboard');
 
-Route::get('/home', 'DashboardController@Dashboard');
+Route::post('/', 'DashboardController@Dashboard');
 
 Route::post('/login', 'LoginController@Login');
+
+Route::post('/submitIssue', 'IssueController@Submit');
+
+Route::post('/issueType', 'IssueController@issueType');
+
+Route::post('/issueLevel', 'IssueController@issueLevel');
+
+Route::get('/new', 'IssueController@Create');
+
+Route::post('/fetchTable', 'IssueController@FetchTable');
