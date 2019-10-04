@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use DB;
 
 class DashboardController extends Controller
 {
@@ -12,7 +13,11 @@ class DashboardController extends Controller
         if (!$request->session()->has('id')) {
             return view('/support/auth/login');
         } else {
-            return view('/support/issue/home');
+            $users = DB::table('user')
+            ->where('status', 1)
+            ->where('user_type', 0)
+            ->where('state_id', $request->session()->get('state_id'))->get()->toArray();
+            return view('/support/issue/home', ['users' => $users]);
         }
     }
 }

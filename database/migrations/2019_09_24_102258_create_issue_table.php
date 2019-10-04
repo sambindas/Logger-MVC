@@ -14,7 +14,7 @@ class CreateIssueTable extends Migration
     public function up()
     {
         Schema::create('issue', function (Blueprint $table) {
-            $table->increments('id');
+            $table->increments('issue_id');
             $table->string('facility', 20);
             $table->string('issue_type', 10);
             $table->string('issue_level', 20);
@@ -26,7 +26,7 @@ class CreateIssueTable extends Migration
             $table->tinyInteger('support_officer');
             $table->string('priority', 10);
             $table->string('issue_reported_on', 50);
-            $table->tinyInteger('status');
+            $table->tinyInteger('issue_status');
             $table->string('resolution_date', 50)->nullable();
             $table->tinyInteger('resolved_by')->nullable();
             $table->string('info_relayed_to', 50)->nullable();

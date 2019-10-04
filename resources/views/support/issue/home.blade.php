@@ -12,10 +12,13 @@
                                 <li><span>Incident Log</span></li>
                                 <li><span></span></li>
                                 <li><span></span></li>
-                                <a href="new" id="newissue" class="btn btn-primary btn-flat">New Incident</a>
+                                <a href="/incident/new" id="newissue" class="btn btn-primary btn-flat">New Incident</a>
                                 <li>
                                 @if(Session::get('msg'))
                                 <span class="alert alert-success">{{ Session::get('msg')}}</span>
+                                @endif
+                                @if(Session::get('badmsg'))
+                                <span class="alert alert-danger">{{ Session::get('badmsg')}}</span>
                                 @endif
                                 </li>
                             </ul>
@@ -81,6 +84,7 @@
                                         <label>Assigned</label>
                                         <select class="form-control" id="filter_assign">
                                             <option value="">All</option>
+                                            <option value="{{ Session::get('id')}}">Me</option>
                                         </select>
                                     </div> &nbsp;&nbsp; &nbsp;&nbsp;
                                     <div class="col-sm-2">
@@ -103,6 +107,9 @@
                                         <label>Incident Logger</label>
                                         <select class="form-control" id="logger">
                                             <option value="">Select One</option>
+                                            @foreach($users as $user)
+                                            <option value="{{$user->id}}">{{$user->user_name}}</option>
+                                            @endforeach
                                         </select>
                                     </div>&nbsp;&nbsp;
                                     <div class="col-sm-2">
@@ -173,7 +180,7 @@
                                 </div>
                             </div>
                         </div>
-            </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,29 +231,35 @@
     <script src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap.min.js"></script>
     <script>
-    function dope(iss){
-        // var iss = $('.submit_comm').val();
-        let fid = 'submit_comm'+iss;
-        console.log(fid)
-        $('#'+fid).submit(function(){
-            $('#submit_btnc').prop('disabled', true);
-            $('#submitbtnid').html('Processing...');
-            let id = 'submit_comm';
+    function doAction(issueID, actionType, modalName, responseOne, responseTwo, responseZero){
+        $('#'+actionType+issueID).submit(function(){
+            $('.submit-btn').prop('disabled', true);
+            $('.modalText').html('Processing...');
             let dataset = $(this).serialize();
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
             $.ajax({
-                url: 'processing.php',
+                url: '/processAction',
                 type: 'post',
-                data: {dataset, submit_comm: id},
+                data: {dataset, actionType: actionType},
                 success: function(response){
                     if (response == 1) {
                         console.log(response)
-                        $('#comm'+iss).modal('hide');
-                        $('#success').html('Comments Added and Mail Was Sent');
+                        $('#'+modalName+issueID).modal('hide');
+                        $('#success').html(responseOne);
                         $('#launch').modal('show');
-                    } else {
+                    } else if (response == 2) {
                         console.log(response)
-                        $('#comm'+iss).modal('hide');
-                        $('#success').html('Comments Added but mail was not sent');
+                        $('#'+modalName+issueID).modal('hide');
+                        $('#success').html(responseTwo);
+                        $('#launch').modal('show');
+                    } else if (response == 0) {
+                        console.log(response)
+                        $('#'+modalName+issueID).modal('hide');
+                        $('#success').html(responseZero);
                         $('#launch').modal('show');
                     }
                 }
@@ -254,256 +267,9 @@
 
         });
         }
-
-    function dope1(iss){
-    // var iss = $('.submit_comm').val();
-    let fid = 'submit_done'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_btnd').prop('disabled', true);
-        $('#submitdone').html('Processing...');
-        let id = 'submit_done';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_done: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#done'+iss).modal('hide');
-                    $('#success').html('Incident marked as done and mail was sent');
-                    $('#launch').modal('show');
-                } else if (response == 0) {
-                    console.log(response)
-                    $('#done'+iss).modal('hide');
-                    $('#success').html('Incident Marked as done but mail was not sent');
-                    $('#launch').modal('show');
-                } else {
-                    $('#done'+iss).modal('hide');
-                    $('#success').html('Incident Marked As Done');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-
-    function dope2(iss){
-    // var iss = $('.submit_comm').val();
-    let fid = 'submit_reo'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_reod').prop('disabled', true);
-        $('#submitreo').html('Processing...');
-        let id = 'submit_reo';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_reo: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#reo'+iss).modal('hide');
-                    $('#success').html('Issue Reopened and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#reo'+iss).modal('hide');
-                    $('#success').html('Issue Reopened.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-
-    function dope3(iss){
-    let fid = 'submit_nai'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_naid').prop('disabled', true);
-        $('#submitnai').html('Processing...');
-        let id = 'submit_nai';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_nai: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#nai'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not An Issue and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#nai'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not An Issue.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-    
-    function dope4(iss){
-    let fid = 'submit_noc'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_nocd').prop('disabled', true);
-        $('#submitnoc').html('Processing...');
-        let id = 'submit_noc';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_noc: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#noc'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not Clear and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#noc'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not Clear.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-
-    function dope5(iss){
-    let fid = 'submit_req'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_reqd').prop('disabled', true);
-        $('#submitbtnreq').html('Processing...');
-        let id = 'submit_req';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_req: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#req'+iss).modal('hide');
-                    $('#success').html('Incident Marked for Approval and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#req'+iss).modal('hide');
-                    $('#success').html('Incident Marked for Approval.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-    
-    function dope6a(iss){
-    let fid = 'submit_app'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_appd').prop('disabled', true);
-        $('#submitbtnapp').html('Processing...');
-        let id = 'submit_app';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_app: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#app'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Approved and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#app'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Approved.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-
-    function dope6b(iss){
-    let fid = 'submit_app'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_nappd').prop('disabled', true);
-        $('#submitbtnapp').html('Processing...');
-        let id = 'submit_dapp';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_dapp: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#app'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not Approved and Comments were added');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#app'+iss).modal('hide');
-                    $('#success').html('Incident Marked as Not Approved.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
-
-    function dope7(iss){
-    let fid = 'submit_re'+iss;
-    console.log(fid)
-    $('#'+fid).submit(function(){
-        $('#submit_reb').prop('disabled', true);
-        $('#submitbtnre').html('Processing...');
-        let id = 'submit_re';
-        let dataset = $(this).serialize();
-        $.ajax({
-            url: 'processing.php',
-            type: 'post',
-            data: {dataset, submit_re: id},
-            success: function(response){
-                if (response == 1) {
-                    console.log(response)
-                    $('#re'+iss).modal('hide');
-                    $('#success').html('Incident Reassigned Successfully and Mail was sent');
-                    $('#launch').modal('show');
-                } else if (response == 2) {
-                    console.log(response)
-                    $('#re'+iss).modal('hide');
-                    $('#success').html('Incident Reassigned Successfully.');
-                    $('#launch').modal('show');
-                }
-            }
-        });
-
-    });
-    }
     </script>
     <script type="text/javascript" language="javascript" >
      $(document).ready(function(){
-        console.log(123);
       $.fn.dataTable.ext.errMode = 'none';
         fill_datatable();
       
@@ -520,38 +286,41 @@
         "processing" : true,
         "pageLength": 25,
         "serverSide" : true,
+        "paging": true,
         "createdRow": function(row, data, index) {
-
             switch (data[8]) {
-                case '0': 
+                case 0: 
                     $(row).css('background-color', 'white');
                     break;
-                case '1':
+                case 1:
                     $(row).css('background-color', '#f49b42');
                     break;
-                case '2': 
+                case 2: 
                     $(row).css('background-color', '#7d998b');
                     break;
-                case '3':
+                case 3:
                     $(row).css('background-color', '#42f45f');
                     break;
-                case '4': 
+                case 4: 
                     $(row).css('background-color', '#f4e624');
                     break;
-                case '5':
+                case 5:
                     $(row).css('background-color', '#5394ed');
                     break;
-                case '6': 
+                case 6: 
                     $(row).css('background-color', '#42ebf4');
                     break;
-                case '7':
+                case 7:
                     $(row).css('background-color', '#f95454');
                     break;
-                case '8': 
+                case 8:
                     $(row).css('background-color', '#f6f6ad');
                     break;
-                case '9': 
+                case 9: 
                     $(row).css('background-color', '#e777e3');
+                    break;
+                case 10: 
+                    $(row).css('background-color', '#AA5151');
                     break;
                 default:
                     $(row).css('background-color', 'white');
@@ -598,37 +367,40 @@
                 ],
                 "serverSide" : true,
                 "createdRow": function(row, data, index) {
-
+                    
                     switch (data[8]) {
-                        case '0': 
+                        case 0: 
                             $(row).css('background-color', 'white');
                             break;
-                        case '1':
+                        case 1:
                             $(row).css('background-color', '#f49b42');
                             break;
-                        case '2': 
+                        case 2: 
                             $(row).css('background-color', '#7d998b');
                             break;
-                        case '3':
+                        case 3:
                             $(row).css('background-color', '#42f45f');
                             break;
-                        case '4': 
+                        case 4: 
                             $(row).css('background-color', '#f4e624');
                             break;
-                        case '5':
+                        case 5:
                             $(row).css('background-color', '#5394ed');
                             break;
-                        case '6': 
+                        case 6: 
                             $(row).css('background-color', '#42ebf4');
                             break;
-                        case '7':
+                        case 7:
                             $(row).css('background-color', '#f95454');
                             break;
-                        case '8': 
+                        case 8: 
                             $(row).css('background-color', '#f6f6ad');
                             break;
-                        case '9': 
+                        case 9: 
                             $(row).css('background-color', '#e777e3');
+                            break;
+                        case 10: 
+                            $(row).css('background-color', '#AA5151');
                             break;
                         default:
                             $(row).css('background-color', 'white');
@@ -637,7 +409,7 @@
                 "order" : [],
                 "searching" : false,
                 "ajax" : {
-                url:"ajax/fetch.php",
+                url:"/fetchTable",
                 type:"POST",
                 data:{
                 filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
