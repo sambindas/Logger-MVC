@@ -15,6 +15,10 @@ Route::get('/', 'DashboardController@Dashboard');
 
 Route::post('/', 'DashboardController@Dashboard');
 
+Route::get('/incident/media/{id}', 'DashboardController@Media');
+
+Route::get('/incident/edit/{id}', 'DashboardController@Edit');
+
 //Auth
 Route::post('/login', 'LoginController@Login');
 
@@ -30,6 +34,18 @@ Route::get('/incident/new', 'IssueController@Create');
 
 Route::post('/fetchTable', 'IssueController@FetchTable');
 
+Route::post('/incident/media/ProcessMediaUpload', 'IssueController@UploadMedia');
+
+Route::post('/updateCaption', 'IssueController@updateCaption');
+
+Route::post('/deleteMedia', 'IssueController@deleteMedia');
+
+Route::post('/incident/edit', 'IssueController@Edit');
+
 //Issue Modal Actions
 
 Route::post('/processAction', 'IssueController@ProcessAction');
+
+//Facility
+
+Route::get('/facility', 'FacilityController@Dashboard');

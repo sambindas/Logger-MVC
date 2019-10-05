@@ -51,12 +51,67 @@ class IssueController extends Controller
         $runQuery = $query->orderBy('issue_id', 'desc')->get();
         $data = array();
         foreach($runQuery as $row) {
+            #
+            $finalDate = strtotime($row->resolution_date) - strtotime($row->issue_date);
+            #
             $reassignDropdown = '';
             $reassignQuery = DB::table('user')->where('status', 1)->where('id', '!=', $row->assigned_to)->get();
             foreach ($reassignQuery as $reassignList) {
                 $reassignDropdown .= '<option value="'.$reassignList->id.'">'.$reassignList->user_name.'</option>';
             }
+            
             $assignedToName = DB::table('user')->where('id', $row->assigned_to)->get()->toArray();
+            $resolvedByName = DB::table('user')->where('id', $row->resolved_by)->get();
+            $displayCommentsQuery = DB::table('comments')->select('user.user_name', 'comments.comment as comment', 'comments.status as status', 'comments.date_added as date_added')
+                                                    ->where('issue_id', $row->issue_id)
+                                                    ->join('user', 'comments.user_id', 'user.id')
+                                                    ->get();
+            #for movement modal
+            $log = '';
+            $movements = DB::table('movement')->where('issue_id', $row->issue_id)->join('user', 'movement.done_by', 'user.id')->get();
+            if ($movements->count() > 0) {
+                foreach ($movements as $movement) {
+                    $log .= '<b>'.$movement->movement.' </b> - '.$movement->user_name.' <i> @ '.$movement->done_at.'</i><br>'; 
+                }
+            } else {
+                $log = "<p>No Movements For This Incident</p>";
+            }
+            
+            #
+            #for view comments modal
+            $displayComments = '';
+            if (count($displayCommentsQuery) >= 1) {
+                foreach ($displayCommentsQuery as $display) {
+                    if ($display->status == 0) {
+                        $displayComments .='<b>'.$display->user_name.' - (Reopened):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 1) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Done):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 2) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Not An Issue):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 4) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Incomplete):</b> '.$display->comment. ' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 5) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Not Clear):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 6) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Require Approval):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 7) {
+                        $displayComments .= '<b>'.$display->user_name.' - (Disapproved):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 8) {
+                        $displayComments .='<b>'.$display->user_name.' - (Approved):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    } elseif ($display->status == 10) {
+                        $displayComments .='<b>'.$display->user_name.' - (Not Applicable):</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    }  else {
+                        $displayComments .='<b>'.$display->user_name.' - :</b> '.$display->comment.' <i> @ '.$display->date_added.'</i><br>'; 
+                    }
+                }
+            } else {
+                $displayComments .='<p>No Comments For This Incident</p>';
+            }
+            #
+            $cfm = '';
+            // if (!$row->issue_status = null) {
+            //     $cfm = $resolvedByName[0]->user_name. '<br>'. $row->resolution_date;
+            // }
             $done = "<div class='modal fade' id='done".$row->issue_id."'>
                 <div class='modal-dialog modal-notify modal-primary'>
                     <div class='modal-content'>
@@ -348,6 +403,152 @@ class IssueController extends Controller
                     </div>
                 </div>
             </div>";
+
+            $confirmed = "<div id='confirmed".$row->issue_id."' class='modal fade bd-example-modal-lg'>
+                <div class='modal-dialog modal-notify modal-primary modal-lg'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='heading lead'>Confirm Incident ".$row->issue_id." Has Been Solved</h5>
+                            <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
+                        </div>
+                        <div class='modal-body'>
+                            <div class='container'>
+                                <form id='submit_confirmed".$row->issue_id."' method='post' action='javascript:;'>
+                                    <div class='login-form-body'>
+                                        <div class='row'> 
+                                            <div class='col-sm-4'>           
+                                                <div class='form-gp'>
+                                                    <h4 class='header-title mb-0'>Resolved By</h4>
+                                                    <p>
+                                                    ".$cfm."
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class='col-sm-4'>           
+                                                <div class='form-gp'>
+                                                    <h4 class='header-title mb-0'>Info Relayed To</h4>
+                                                    <input type='text' name='infoRelayedTo'>
+                                                </div>
+                                            </div>
+                                            <input type='hidden' name='issue_id' value='".$row->issue_id."'>
+                                            <div class='col-sm-4'>           
+                                                <div class='form-gp'>
+                                                    <h4 class='header-title mb-0'>Info Medium</h4>
+                                                    <input type='text' name='infoMedium'>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br><button type='submit' id='submit_btnd'
+                                    onClick=\"doAction(".$row->issue_id.", 'submit_confirmed', 'confirmed', 'Issue Confirmed Successfully', 'Issue Confirmed Successfully', 'An Error Occured')\" 
+                                    class='btn btn-primary submit-btn' name='submit_confirmed'>Confirm</button>
+                                    <p class='modalText'></p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>";
+
+            $summary = "<div class='modal fade bd-example-modal-lg' id='summary".$row->issue_id."'>
+                <div class='modal-dialog modal-notify modal-primary modal-lg'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='heading lead'>Summary of this Incident</h5>
+                            <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
+                        </div>
+                        <div class='modal-body' style='text-align: left;'>
+                            
+                            <p><b>Facility:</b> ".$row->facility."</p>
+                            <p><b>Type:</b> ".$row->issue_type."</p>
+                            <p><b>Level:</b> ".$row->issue_level."</p>
+                            <p><b>Priotity:</b> ".$row->priority."</p>
+                            <p><b>Incident:</b> ".$row->issue."</p>
+                            <p><b>Incident reported on:</b> ".$row->issue_reported_on." by ". $row->issue_client_reporter."</p>
+                            <p><b>Submitted by:</b> ".$row->user_name." on ". $row->issue_date."</p>
+                            <p><b>Resolved by:</b> ".$assignedToName[0]->user_name." on ". $row->resolution_date."</p>
+                            <p><b>Info Relayed to:</b> ".$row->info_relayed_to." by ".$row->info_medium."</p>
+                            <p><b>Incident was resolved in:</b> ".$this->secondsToTime($finalDate)."</p>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>";
+
+            $media = "<div class='modal fade and carousel slide' id='".$row->issue_id."media'>
+                <div class='modal-dialog modal-notify modal-primary'>
+                <div class='modal-content'>
+                    <div class='modal-body'>
+
+                    <div id='dynamic_slide_show' class='carousel slide' data-ride='carousel'>
+                        <ol class='carousel-indicators'>
+                        ".$this->make_slide_indicators($row->issue_id)."
+                        </ol>
+
+                        <div class='carousel-inner'>
+                        ".$this->make_slides($row->issue_id)."
+                        </div>
+
+                    </div>
+
+                    <script type='text/javascript'>
+                            $(document).ready(function() {
+                                $('a.gallery').featherlightGallery({
+                                
+                                }); 
+                            });
+                        </script>
+                    </div>
+                </div>
+                </div>
+            </div>";
+
+            $viewComments = "<div class='modal fade bd-example-modal-sm' id='viewComments".$row->issue_id."'>
+                <div class='modal-dialog modal-notify modal-primary modal-notify modal-primary modal-lg'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='heading lead'>View Incident Comments</h5>
+                            <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
+                        </div>
+                        <div class='modal-body' style='text-align: left;'>".$displayComments."
+                        </div>
+                    </div>
+                </div>
+            </div>";
+
+            $send_to_client = "<div class='modal fade' id='sendToClient".$row->issue_id."'>
+                <div class='modal-dialog modal-notify modal-primary modal-notify modal-primary modal-sm'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='heading lead'>Copy Incident to User Dashboard</h5>
+                            <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
+                        </div>
+                        <div class='modal-body'>
+                            <form id='send_to_client".$row->issue_id."' method='post' action='javascript:;'>
+                                <input type='hidden' name='issue_id' value='".$row->issue_id."'><br>
+                                <br><button type='submit' id='submit_btnd'
+                                onClick=\"doAction(".$row->issue_id.", 'send_to_client', 'sendToClient', 'Issue Copied Successfully', 'Issue Copied Successfully', 'An Error Occured')\" 
+                                class='btn btn-primary submit-btn' name='send_to_client'>Copy</button>
+                                <p class='modalText'></p>
+                            </form><br>
+                        </div>
+                    </div>
+                </div>
+            </div>";
+
+            $movement = "<div class='modal fade bd-example-modal-sm' id='logs".$row->issue_id."'>
+                <div class='modal-dialog modal-notify modal-primary modal-lg'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='heading lead'>View Incident Movement</h5>
+                            <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
+                        </div>
+                        <div class='modal-body' style='text-align: left;'>
+                            ".$log."
+                        </div>
+                    </div>
+                </div>
+            </div>";
             if ($row->issue_status == 0 or $row->issue_status == 8 and $row->type == 0 or $row->type == 2) {
                 $actions = "<div class='dropdown'>
                             <button class='btn btn-xs btn-primary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
@@ -362,9 +563,9 @@ class IssueController extends Controller
                                 <a data-toggle='modal' data-target='#notApplicable".$row->issue_id."' class='dropdown-item' href='#'>Not Applicable</a>
                             <div class='dropdown-divider'></div>
                                 <a data-toggle='modal' data-target='#addComments".$row->issue_id."' class='dropdown-item' href='#'>Add Comments</a>
-                                <a data-toggle='modal' data-target='#comments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
+                                <a data-toggle='modal' data-target='#viewComments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
                             <div class='dropdown-divider'></div>
-                                <a class='dropdown-item' href=/incident/image/".$row->issue_id.">Upload Media</a>
+                                <a class='dropdown-item' href=/incident/media/".$row->issue_id.">Upload Media</a>
                                 <a class='dropdown-item' data-toggle='modal' href='#".$row->issue_id."media'>View Media</a>
                             <div class='dropdown-divider'></div>
                                 <a class='dropdown-item' href='/incident/edit/".$row->issue_id."'>Edit Incident</a>
@@ -373,7 +574,7 @@ class IssueController extends Controller
                             </div>
                         </div>
                         ".$done."".$reopen."".$notAnIssue."".$incomplete."".$incompleteInformationProvided."".$requiresApproval."".$notApplicable."
-                        ".$notClear."".$reassign."".$addComments."
+                        ".$notClear."".$reassign."".$addComments."".$media."".$viewComments."".$movement."
                         ";
                 } elseif ($row->issue_status == 0 or $row->issue_status == 8 and $row->type == 1) {
                     $actions = "<div class='dropdown'>
@@ -381,7 +582,7 @@ class IssueController extends Controller
                             Action
                             </button>
                             <div class='dropdown-menu' aria-labelledby='dropdownMenuButton'>
-                                <a data-toggle='modal' data-target='#send".$row->issue_id."' class='dropdown-item' href='#'>Copy Incident</a>
+                                <a data-toggle='modal' data-target='#sendToClient".$row->issue_id."' class='dropdown-item' href='#'>Copy Incident</a>
                                 <a data-toggle='modal' data-target='#done".$row->issue_id."' class='dropdown-item' href='#'>Done</a>
                                 <a data-toggle='modal' data-target='#notAnIssue".$row->issue_id."' class='dropdown-item' href='#'>Not an Issue</a>
                                 <a data-toggle='modal' data-target='#notClear".$row->issue_id."' class='dropdown-item' href='#'>Not Clear</a>
@@ -389,9 +590,9 @@ class IssueController extends Controller
                                 <a data-toggle='modal' data-target='#incompleteInformationProvided".$row->issue_id."' class='dropdown-item' href='#'>Incomplete Information</a>
                             <div class='dropdown-divider'></div>
                                 <a data-toggle='modal' data-target='#addComments".$row->issue_id."' class='dropdown-item' href='#'>Add Comments</a>
-                                <a data-toggle='modal' data-target='#comments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
+                                <a data-toggle='modal' data-target='#viewComments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
                             <div class='dropdown-divider'></div>
-                                <a class='dropdown-item' href=/incident/image/".$row->issue_id.">Upload Media</a>
+                                <a class='dropdown-item' href=/incident/media/".$row->issue_id.">Upload Media</a>
                                 <a class='dropdown-item' data-toggle='modal' href='#".$row->issue_id."media'>View Media</a>
                             <div class='dropdown-divider'></div>
                                 <a class='dropdown-item' href='/incident/edit/".$row->issue_id."'>Edit Incident</a>
@@ -400,7 +601,7 @@ class IssueController extends Controller
                             </div>
                         </div>
                         ".$done."".$reopen."".$notAnIssue."".$incompleteInformationProvided."".$requiresApproval."".$notApplicable."
-                        ".$notClear."".$reassign."".$addComments."
+                        ".$notClear."".$reassign."".$addComments."".$media."".$viewComments."".$send_to_client."".$movement."
                         ";
             } elseif ($row->issue_status == 1) {
                 $actions = "  <div class='dropdown'>
@@ -408,12 +609,12 @@ class IssueController extends Controller
                                 Action
                                 </button>
                                 <div class='dropdown-menu' aria-labelledby='dropdownMenuButton'>
-                                    <a data-toggle='modal' data-target='#con".$row->issue_id."' class='dropdown-item' href='#'>Confirmed</a>
+                                    <a data-toggle='modal' data-target='#confirmed".$row->issue_id."' class='dropdown-item' href='#'>Confirmed</a>
                                     <a data-toggle='modal' data-target='#incomplete".$row->issue_id."' class='dropdown-item' href='#'>Incomplete</a>
                                     <a data-toggle='modal' data-target='#reopen".$row->issue_id."' class='dropdown-item' href='#'>Reopen</a>
                                 <div class='dropdown-divider'></div>
                                     <a data-toggle='modal' data-target='#addComments".$row->issue_id."' class='dropdown-item' href='#'>Add Comments</a>
-                                    <a data-toggle='modal' data-target='#comments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
+                                    <a data-toggle='modal' data-target='#viewComments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
                                 <div class='dropdown-divider'></div>
                                     <a class='dropdown-item' data-toggle='modal' href='#".$row->issue_id."media'>View Media</a>
                                 <div class='dropdown-divider'></div>
@@ -421,7 +622,7 @@ class IssueController extends Controller
                                     <a class='dropdown-item' data-toggle='modal' href='#logs".$row->issue_id."'>View Issue Movement</a></div>
                                 </div>
                             </div>
-                            ".$reopen."".$incomplete."".$reassign."".$addComments."
+                            ".$reopen."".$incomplete."".$reassign."".$addComments."".$confirmed."".$media."".$viewComments."".$movement."
                         ";
             } elseif ($row->issue_status == 2) {
                 $actions = '<div class="dropdown">
@@ -432,7 +633,7 @@ class IssueController extends Controller
                             <a data-toggle="modal" data-target="#reopen'.$row->issue_id.'" class="dropdown-item" href="#">Reopen</a>
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
                             <div class="dropdown-divider"></div>
@@ -440,7 +641,7 @@ class IssueController extends Controller
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                             </div>
                         </div>
-                        '.$reopen.''.$reassign.''.$addComments.'
+                        '.$reopen.''.$reassign.''.$addComments.''.$media.''.$viewComments.''.$movement.'
                         ';       
             } elseif ($row->issue_status == 3) {
                 $actions = '  <div class="dropdown">
@@ -448,16 +649,16 @@ class IssueController extends Controller
                             Action
                             </button>
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <a data-toggle="modal" data-target="#sum'.$row->issue_id.'" class="dropdown-item" href="#">View Summary</a>
+                            <a data-toggle="modal" data-target="#summary'.$row->issue_id.'" class="dropdown-item" href="#">View Summary</a>
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                             </div>
                         </div>
-                        '.$reopen.''.$reassign.''.$addComments.'
+                        '.$reopen.''.$reassign.''.$addComments.''.$summary.''.$media.''.$viewComments.''.$movement.'
             ';                                                            
             } elseif ($row->issue_status == 4) {
                 $actions = '  <div class="dropdown">
@@ -469,9 +670,9 @@ class IssueController extends Controller
                                 <a data-toggle="modal" data-target="#reopen'.$row->issue_id.'" class="dropdown-item" href="#">Reopen</a>
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/incident/image/'.$row->issue_id.'">Upload Media</a>
+                                <a class="dropdown-item" href="/incident/media/'.$row->issue_id.'">Upload Media</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="/incident/edit/'.$row->issue_id.'">Edit Incident</a>
@@ -479,7 +680,7 @@ class IssueController extends Controller
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                             </div>
                         </div>
-                        '.$reopen.''.$done.''.$reassign.''.$addComments.'
+                        '.$reopen.''.$done.''.$reassign.''.$addComments.''.$media.''.$viewComments.''.$movement.'
                         ';
                     }
              elseif ($row->issue_status == 5) {
@@ -492,7 +693,7 @@ class IssueController extends Controller
                                 <a data-toggle="modal" data-target="#reopen'.$row->issue_id.'" class="dropdown-item" href="#">Reopen</a>
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="incident/image/'.$row->issue_id.'">Upload Media</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
@@ -501,7 +702,7 @@ class IssueController extends Controller
                                 <a class="dropdown-item" data-toggle="modal" href="#reassign'.$row->issue_id.'">Reassign Incident</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                         </div>
-                        '.$reopen.''.$done.''.$reassign.''.$addComments.'
+                        '.$reopen.''.$done.''.$reassign.''.$addComments.''.$media.''.$viewComments.''.$movement.'
                         ';
                     }
              elseif ($row->issue_status == 6) {
@@ -514,7 +715,7 @@ class IssueController extends Controller
                                 <a data-toggle="modal" data-target="#notApproved'.$row->issue_id.'" class="dropdown-item" href="#">Not Approved</a>
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="incident/image/'.$row->issue_id.'">Upload Media</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
@@ -522,7 +723,7 @@ class IssueController extends Controller
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                             </div>
                         </div>
-                        '.$approved.''.$notApproved.''.$addComments.'
+                        '.$approved.''.$notApproved.''.$addComments.''.$media.''.$viewComments.''.$movement.'
                         ';
                     }
              elseif ($row->issue_status == 7) {
@@ -533,7 +734,7 @@ class IssueController extends Controller
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <div class="dropdown-divider"></div>
                                 <a data-toggle="modal" data-target="#addComments'.$row->issue_id.'" class="dropdown-item" href="#">Add Comments</a>
-                                <a data-toggle="modal" data-target="#comments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
+                                <a data-toggle="modal" data-target="#viewComments'.$row->issue_id.'" class="dropdown-item" href="#">View Comments</a>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="incident/image/'.$row->issue_id.'">Upload Media</a>
                                 <a class="dropdown-item" data-toggle="modal" href="#'.$row->issue_id.'media">View Media</a>
@@ -541,7 +742,7 @@ class IssueController extends Controller
                                 <a class="dropdown-item" data-toggle="modal" href="#logs'.$row->issue_id.'">View Incident Movement</a></div>
                             </div>
                         </div>
-                        '.$addComments.'
+                        '.$addComments.''.$media.''.$viewComments.''.$movement.'
                         ';
             } elseif ($row->issue_status == 9) {
                         $actions = "  <div class='dropdown'>
@@ -555,7 +756,7 @@ class IssueController extends Controller
                                 <a data-toggle='modal' data-target='#requiresApproval".$row->issue_id."' class='dropdown-item' href='#'>Requires Approval</a>
                             <div class='dropdown-divider'></div>
                                 <a data-toggle='modal' data-target='#addComments".$row->issue_id."' class='dropdown-item' href='#'>Add Comments</a>
-                                <a data-toggle='modal' data-target='#comments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
+                                <a data-toggle='modal' data-target='#viewComments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
                             <div class='dropdown-divider'></div>
                                 <a class='dropdown-item' href='incident/image/".$row->issue_id."'>Upload Media</a>
                                 <a class='dropdown-item' data-toggle='modal' href='#".$row->issue_id."media'>View Media</a>
@@ -565,7 +766,7 @@ class IssueController extends Controller
                                 <a class='dropdown-item' data-toggle='modal' href='#logs".$row->issue_id."'>View Incident Movement</a>
                             </div>
                         </div>
-                        ".$notAnIssue."".$addComments."".$done."".$notClear."".$requiresApproval."".$reassign."
+                        ".$notAnIssue."".$addComments."".$done."".$notClear."".$requiresApproval."".$reassign."".$media."".$viewComments."".$movement."
                         ";
             } elseif ($row->issue_status == 10) {
                         $actions = "  <div class='dropdown'>
@@ -576,7 +777,7 @@ class IssueController extends Controller
                             <a data-toggle='modal' data-target='#reopen".$row->issue_id."' class='dropdown-item' href='#'>Reopen</a>                
                             <div class='dropdown-divider'></div>
                                 <a data-toggle='modal' data-target='#addComments".$row->issue_id."' class='dropdown-item' href='#'>Add Comments</a>
-                                <a data-toggle='modal' data-target='#comments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
+                                <a data-toggle='modal' data-target='#viewComments".$row->issue_id."' class='dropdown-item' href='#'>View Comments</a>
                             <div class='dropdown-divider'></div>
                                 <a class='dropdown-item' href='incident/image/".$row->issue_id."'>Upload Media</a>
                                 <a class='dropdown-item' data-toggle='modal' href='#".$row->issue_id."media'>View Media</a>
@@ -586,7 +787,7 @@ class IssueController extends Controller
                                 <a class='dropdown-item' data-toggle='modal' href='#logs".$row->issue_id."'>View Incident Movement</a>
                             </div>
                         </div>
-                        ".$reopen."".$reassign."".$addComments."
+                        ".$reopen."".$reassign."".$addComments."".$media."".$viewComments."".$movement."
                         ";
                 }
             $subArray = array();
@@ -662,6 +863,31 @@ class IssueController extends Controller
             }
         }
         return redirect('/')->with("badmsg", "An Error Occured, Please Try Again");
+    }
+
+    public function Edit (Request $request) {
+        
+        $update = DB::table('issue')->where('issue_id', $request->issue_id)->update([
+            'facility'              => $request->facility,
+            'issue_type'            => $request->type,
+            'issue_level'           => $request->level,
+            'issue'                 => $request->issue,
+            'issue_client_reporter' => $request->clientReporter,
+            'affected_department'   => $request->affectedDepartment,
+            'priority'              => $request->priority,
+        ]);
+        if ($update) {
+            $insertMovement = DB::table('movement')->insert([
+                'issue_id'  => $request->issue_id,
+                'done_by'   => $request->session()->get('id'),
+                'done_at'   => date('d-m-Y H:i:s'),
+                'movement'  => 'Incident was edited'
+            ]);
+
+            return redirect('/')->with("msg", "Incident Edited Successfully");
+        } else {
+            return redirect('/')->with("badmsg", "An Error Occured, Please Try Again");
+        }
     }
 
     public function issueType(Request $request) {
@@ -861,6 +1087,23 @@ class IssueController extends Controller
                 }
                 break;
 
+            case 'send_to_client':
+            $movement = 'Incident was Copied to Support Dashboard';
+            $sub = 'Client Incident Copied';
+            $mess = 'which required Approval, has been copied to your dashboard';
+            $mailTo = 'issue.assigned_to';
+                $result = $this->ProcessActionFunction($issueID, 2, $loggedID, $loggedName, $newRequest['comments'], $movement, $sub, $mess, $mailTo);
+                if ($result == 'sent') {
+                    echo 1;
+                    exit();
+                } elseif ($result == 'not sent') {
+                    echo 2;
+                    exit();
+                } else {
+                    echo 0;
+                }
+                break;
+
             case 'submit_comments':
             $movement = 'Comments Were Added';
             $subject = 'New Comments Available';
@@ -944,6 +1187,36 @@ class IssueController extends Controller
                     echo 1;
                     exit();
                 } elseif ($result == 'not sent') {
+                    echo 2;
+                    exit();
+                }
+                break;
+
+            case 'submit_confirmed':
+            $movement = 'Incident was Confirmed';
+            $done = DB::table('issue')
+                        ->where('issue_id', $issueID)
+                        ->update([
+                            'info_relayed_to' => $newRequest['infoRelayedTo'],
+                            'info_medium' => $newRequest['infoMedium'],
+                            'issue_status' => 3
+                        ]);
+            
+            if(!$done) {
+                echo 0;
+                exit();
+            }
+            $insertMovement = DB::table('movement')->insert([
+                        'issue_id'  => $issueID,
+                        'done_by'   => $loggedID,
+                        'done_at'   => $date,
+                        'movement'  => $movement
+            ]);
+            
+                if ($insertMovement) {
+                    echo 1;
+                    exit();
+                } else {
                     echo 2;
                     exit();
                 }
@@ -1042,5 +1315,169 @@ class IssueController extends Controller
             $result = 'not sent';
         }
         return $result;
+    }
+
+    public function secondsToTime($inputSeconds) {
+        $secondsInAMinute = 60;
+        $secondsInAnHour = 60 * $secondsInAMinute;
+        $secondsInADay = 24 * $secondsInAnHour;
+    
+        // Extract days
+        $days = floor($inputSeconds / $secondsInADay);
+    
+        // Extract hours
+        $hourSeconds = $inputSeconds % $secondsInADay;
+        $hours = floor($hourSeconds / $secondsInAnHour);
+    
+        // Extract minutes
+        $minuteSeconds = $hourSeconds % $secondsInAnHour;
+        $minutes = floor($minuteSeconds / $secondsInAMinute);
+    
+        // Extract the remaining seconds
+        $remainingSeconds = $minuteSeconds % $secondsInAMinute;
+        $seconds = ceil($remainingSeconds);
+    
+        // Format and return
+        $timeParts = [];
+        $sections = [
+            'day' => (int)$days,
+            'hour' => (int)$hours,
+            'minute' => (int)$minutes,
+            'second' => (int)$seconds,
+        ];
+    
+        foreach ($sections as $name => $value){
+            if ($value > 0){
+                $timeParts[] = $value. ' '.$name.($value == 1 ? '' : 's');
+            }
+        }
+    
+        return implode(', ', $timeParts);
+    }
+
+    public function UploadMedia(Request $request) {
+        $this->validate($request, [
+            'media' => 'required|image|mimes:jpeg,png,jpg,gif|max:1000000',
+            'caption' => 'required'
+        ]);
+        
+        $image = $request->file('media');
+        $newName = rand().'.'.$image->getClientOriginalExtension();
+        $image->move(public_path('images/media'), $newName);
+
+        $insertMedia = DB::table('media')->insert([
+            'issue_id'  => $request->issue_id,
+            'user_id'   => $request->session()->get('id'),
+            'date_added'=> date('d-m-Y H:i:s'),
+            'caption'   => $request->caption,
+            'media_name'=> $newName,
+        ]);
+
+        if(!$insertMedia) {
+            return back()->with('success', 'An error occured. try again');
+        }
+        
+        $insertMovement = DB::table('movement')->insert([
+            'issue_id'  => $request->issue_id,
+            'done_by'   => $request->session()->get('id'),
+            'done_at'   => date('d-m-Y H:i:s'),
+            'movement'  => 'Media was Uploaded'
+        ]);
+
+        $l = DB::table('issue')->select('user.user_name as name', 'user.email as email')
+                ->where('issue_id', $request->issue_id)
+                ->join('user', 'issue.support_officer', 'user.id')
+                ->get()->toArray();
+
+        $a = DB::table('issue')->select('user.user_name as name', 'user.email as email')
+                ->where('issue_id', $request->issue_id)
+                ->join('user', 'issue.assigned_to', 'user.id')
+                ->get()->toArray();
+
+        $email = array($l[0]->email => $l[0]->name, $a[0]->email => $a[0]->name);
+
+        $subject = 'New Media Uploaded';
+        $message = 'Hello,<br>
+                    A media has just been uploaded to Incident Log S/N '.$request->issue_id.'  by '.$request->session()->get('name').'<br>
+                    Please <a href="incident-log.eclathealthcare.com">Log in</a> and Check';
+
+        $result = $this->sendMail($email, $image, $subject, $message);
+        if($result == 'sent'){
+            return back()->with('success', 'Media Uploaded Successfully and mail was sent');
+        } else {
+            return back()->with('success', 'Media Uploaded Successfully but mail was not sent');
+        } 
+    }
+
+    public function updateCaption(Request $request) {
+        $this->validate($request, [
+            'caption' => 'required'
+        ]);
+
+        $update = DB::table('media')
+                    ->where('id', $request->media_id)
+                    ->update([
+                        'caption' => $request->caption,
+                    ]);
+        
+        return back()->with('success', 'Caption Edited Successfully');
+    }
+
+    public function deleteMedia(Request $request) {
+
+        $done = DB::table('media')->where('id', $request->media_id)->delete();
+        
+        return back()->with('success', 'Media Deleted Successfully');
+    }
+
+    public function make_query($issue_id){
+        $makeQuery = DB::table('media')->where('issue_id', $issue_id)->get()->toArray();
+        return $makeQuery;
+    }
+
+    public function make_slide_indicators($issue_id){
+        $output = ''; 
+        $count = 0;
+        $result = $this->make_query($issue_id);
+        foreach($result as $row){
+            if($count == 0){
+                $output .= '
+                <li data-target="#dynamic_slide_show" data-slide-to="'.$count.'" class="active"></li>
+                ';
+            } else {
+                $output .= '
+                <li data-target="#dynamic_slide_show" data-slide-to="'.$count.'"></li>';
+            }
+            $count = $count + 1;
+        }
+        return $output;
+    }
+
+    public function make_slides($issue_id){
+        $output = '';
+        $count = 0;
+        $result = $this->make_query($issue_id);
+        if (count($result) > 0 ) {
+            foreach($result as $row){
+                if($count == 0){
+                    $output .= '<div class="item active">';
+                }else{
+                    $output .= '<div class="item">';
+                }
+                $output .= '
+                <a href="images/media/'.$row->media_name.'" class="gallery">
+                <img class="fancybox" src="images/media/'.$row->media_name.'"  alt="'.$row->caption.'"/>
+                </a>
+                <div class="carousel-caption">
+                </div>
+                </div>
+                ';
+                $count = $count + 1;
+            }
+            return $output;
+        } else {
+            $output = '<p>No Media For This Incident!</p>';
+            return $output;
+        }
     }
 }
