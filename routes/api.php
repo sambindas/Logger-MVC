@@ -1,5 +1,5 @@
 <?php
-
+use App\Issue;
 use Illuminate\Http\Request;
 
 /*
@@ -16,3 +16,8 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::apiResource('/incidents', 'Api\IncidentController');
+Route::get('incidents', 'Api\IncidentController@incidents');
+Route::get('incidents/{id}', 'Api\IncidentController@incidents');
+
+Route::post('login', 'Api\UserController@login');

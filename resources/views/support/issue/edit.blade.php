@@ -13,7 +13,7 @@
                                                 <select name="facility" class="custom-select border-0 pr-3" required>
                                                     <option value="" selected="">Select One</option>
                                                     @foreach($facilities as $facility)
-                                                    <option value="{{$facility->id}}" {{$facility->id == $issues->facility  ? 'selected' : ''}}>{{ $facility->name}}</option>
+                                                    <option value="{{$facility->code}}" {{$facility->id == $issues->facility  ? 'selected' : ''}}>{{ $facility->name}}</option>
                                                     @endforeach
                                                 </select>
                                             </div>

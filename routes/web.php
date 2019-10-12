@@ -49,3 +49,41 @@ Route::post('/processAction', 'IssueController@ProcessAction');
 //Facility
 
 Route::get('/facility', 'FacilityController@Dashboard');
+
+Route::post('/checkFacility', 'FacilityController@CheckFacility');
+
+Route::post('/newFacility', 'FacilityController@Create');
+
+Route::post('/editFacility', 'FacilityController@Edit');
+
+Route::post('/deleteFacility', 'FacilityController@Delete');
+
+Route::post('/editState', 'FacilityController@ChangeState');
+
+//User
+
+Route::get('/user', 'UserController@Dashboard');
+
+Route::post('/checkEmail', 'UserController@CheckEmail');
+
+Route::post('/register', 'UserController@Register');
+
+Route::post('/deactivate', 'UserController@Deactivate');
+
+Route::post('/activate', 'UserController@Activate');
+
+//Client
+
+Route::get('/client', 'UserController@ClientDashboard');
+
+Route::get('/getFacility', 'UserController@GetFacility');
+
+Route::post('/register', 'UserController@Register');
+
+Route::post('/deactivate', 'UserController@Deactivate');
+
+Route::post('/activate', 'UserController@Activate');
+
+//Analytics
+
+Route::get('/charts', 'AnalyticsController@Dashboard');

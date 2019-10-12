@@ -19,8 +19,8 @@ class CreateFacilityTable extends Migration
             $table->string('code', 5);
             $table->string('contact_person', 30);
             $table->string('contact_person_phone', 20);
-            $table->string('server_ip', 20);
-            $table->string('online_url', 55);
+            $table->string('server_ip', 20)->nullable();
+            $table->string('online_url', 55)->nullable();
             $table->string('email', 30);
             $table->tinyInteger('state_id');
         });

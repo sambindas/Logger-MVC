@@ -49,7 +49,7 @@
                             <button type='button' class='close' data-dismiss='modal'><span>&times;</span></button>
                         </div>
                         <div class='modal-body'>
-                            <p>Currently Viewing <?php echo '<b>'.$state_name.'</b>'; ?></p><br><br>
+                            <p>Currently Viewing <b>{{Session::get('state_name')}}</b></p><br><br>
                             <form method="post" action="processing.php">
                                 <select name="state" class="custom-select border-0 pr-3" required>
                                     <option value="" selected="">Select State</option>
@@ -86,39 +86,30 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php
-                                                $il = mysqli_query($conn, "SELECT * from facility");
-                                                $sn = 1;
-                                                while ($li_row = mysqli_fetch_array($il)) {
-                                                $state_id = $li_row['state_id'];
-                                                $l = mysqli_query($conn, "SELECT * from state where id='$state_id'");
-                                                while ($l_row = mysqli_fetch_array($l)) { $state_name = $l_row['state_name']; }
-                                                ?>
+                                            @foreach($facilities as $facility)
                                                 <tr>
-                                                    <td><?php echo $li_row['name'] ; ?></td>
-                                                    <td><?php echo $state_name ; ?></td>
-                                                    <td><?php echo $li_row['contact_person'] ; ?></td>
-                                                    <td><?php echo $li_row['contact_person_phone'] ; ?></td>
-                                                    <td><?php echo $li_row['email'] ; ?></td>
-                                                    <td><?php echo $li_row['server_ip'] ; ?></td>
-                                                    <td><?php echo $li_row['online_url'] ; ?></td>
+                                                    <td>{{$facility->name}}</td>
+                                                    <td>{{$facility->state_name}}</td>
+                                                    <td>{{$facility->contact_person}}</td>
+                                                    <td>{{$facility->contact_person_phone}}</td>
+                                                    <td>{{$facility->email}}</td>
+                                                    <td>{{$facility->server_ip}}</td>
+                                                    <td>{{$facility->online_url}}</td>
                                                     <td><div class="dropdown">
                                                             <button class="btn btn-xs btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                             Action
                                                             </button>
                                                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                                <?php
-                                                                    echo '<a data-toggle="modal" data-target="#edt'.$li_row["id"].'" class="dropdown-item" href="#">Edit</a>';
-                                                                    echo '<a data-toggle="modal" data-target="#cst'.$li_row["id"].'" class="dropdown-item" href="#">Change State</a>';
-                                                                    echo '<a data-toggle="modal" data-target="#del'.$li_row["id"].'" class="dropdown-item" href="#">Delete</a>';
-                                                                ?>
+                                                                <a data-toggle="modal" data-target="#edt{{$facility->id}}" class="dropdown-item" href="#">Edit</a>
+                                                                <a data-toggle="modal" data-target="#cst{{$facility->id}}" class="dropdown-item" href="#">Change State</a>
+                                                                <a data-toggle="modal" data-target="#del{{$facility->id}}" class="dropdown-item" href="#">Delete</a>
                                                             </div>
                                                         </div>
                                                     </td>
                                                 </tr>
 
                                             <!-- edit modal start -->
-                                            <div class="modal fade" id="edt<?php echo $li_row['id']; ?>">
+                                            <div class="modal fade" id="edt{{$facility->id}}">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
@@ -129,48 +120,49 @@
                                                             <!-- login area start -->
                                                             <div class="login-area">
                                                                 <div class="container">
-                                                                        <form action="processing.php" method="post">
+                                                                        <form action="/editFacility" method="post">
+                                                                        @csrf
                                                                             <div class="login-form-head">
+                                                                            Edit {{$facility->name}}
                                                                                 <p id="formErr"></p>
                                                                             </div>
                                                                             <div class="login-form-body">
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" placeholder="Enter Facility Code" name="fcode" value="<?php echo $li_row['code']; ?>" required>
+                                                                                    <input type="text" name="code" placeholder="Enter Facility Code" value="{{$facility->code}}" disabled required>
                                                                                     
                                                                                     <div id="errfc"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" name="fname" placeholder="Facility Name" value="<?php echo $li_row['name']; ?>" required>
+                                                                                    <input type="text" name="name" placeholder="Facility Name" value="{{$facility->name}}" required>
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" name="cperson" placeholder="Contact Person" value="<?php echo $li_row['contact_person']; ?>">
+                                                                                    <input type="text" name="cperson" placeholder="Contact Person" value="{{$facility->contact_person}}">
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" name="cpersonp" placeholder="Contact Person's Phone" value="<?php echo $li_row['contact_person_phone']; ?>">
+                                                                                    <input type="text" name="cpersonp" placeholder="Contact Person's Phone" value="{{$facility->contact_person_phone}}">
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="email" name="email" placeholder="Email" value="<?php echo $li_row['email']; ?>">
+                                                                                    <input type="email" name="email" placeholder="Email" value="{{$facility->email}}">
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" name="server_ip" value="<?php echo $li_row['server_ip']; ?>" placeholder="Local IP">
+                                                                                    <input type="text" name="serverip" value="{{$facility->server_ip}}" placeholder="Local IP">
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
                                                                                 <div class="form-gp">
-                                                                                    <input type="text" name="online_url" placeholder="Online URL" value="<?php echo $li_row['online_url']; ?>">
+                                                                                    <input type="text" name="online_url" placeholder="Online URL" value="{{$facility->online_url}}">
                                                                                     
                                                                                     <div id="errfn"></div>
                                                                                 </div>
-                                                                                <input type="hidden" name="id" value="<?php echo $li_row['id']; ?>">
-                                                                                <input type="hidden" name="url" value="<?php echo $url; ?>"><br>
+                                                                                <input type="hidden" name="id" value="{{$facility->id}}">
                                                                                 <div class="submit-btn-area">
                                                                                     <input class="btn btn-primary" name="submit_edt" type="submit" value="Submit">
                                                                                 </div>
@@ -185,29 +177,25 @@
                                             </div>
 
                                             <!-- Change STate modal start -->
-                                            <div class="modal fade" id="cst<?php echo $li_row['id']; ?>">
+                                            <div class="modal fade" id="cst{{$facility->id}}">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
                                                         <div class="modal-body">
                                                             <!-- login area start -->
                                                             <div class="login-area">
                                                                 <div class="container">
-                                                                        <form action="" method="post">
+                                                                        <form action="/editState" method="post">
+                                                                        @csrf
                                                                             <div class="login-form-body">
                                                                                 <div class="form-gp">
                                                                                     <select name="state_id" id="states" class="custom-select border-0 pr-3" required>
                                                                                         <option value="" selected="">Select State</option>
-                                                                                        <?php
-                                                                                        $fc = mysqli_query($conn, "SELECT * from state");
-                                                                                        while ($fc_row = mysqli_fetch_array($fc)) {
-                                                                                            echo '<option value="'.$fc_row['id'].'">'.$fc_row['state_name'].'</option>';
-                                                                                        }
-                                                                                        ?>
+                                                                                        @foreach($states as $state)
+                                                                                            <option value="{{$state->id}}">{{$state->state_name}}</option>';
+                                                                                        @endforeach
                                                                                     </select>
-                                                                                    <div id="errfn"></div>
                                                                                 </div>
-                                                                                <input type="hidden" name="id" value="<?php echo $li_row['id']; ?>">
-                                                                                <input type="hidden" name="url" value="<?php echo $url; ?>"><br>
+                                                                                <input type="hidden" name="id" value="{{$facility->id}}">
                                                                                 <div class="submit-btn-area">
                                                                                     <input class="btn btn-primary" name="submit_cst" type="submit" value="Submit">
                                                                                 </div>
@@ -222,7 +210,7 @@
                                             </div>
 
                                             <!-- delete modal start -->
-                                            <div class="modal fade" id="del<?php echo $li_row['id']; ?>">
+                                            <div class="modal fade" id="del{{$facility->id}}">
                                                 <div class="modal-dialog modal-sm">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
@@ -231,8 +219,9 @@
                                                         </div>
                                                         <div class="modal-body">
                                                             <p>Are You Sure?</p>
-                                                            <form method="post" action="">
-                                                                <input type="hidden" name="id" value="<?php echo $li_row['id']; ?>">
+                                                            <form method="post" action="/deleteFacility">
+                                                            @csrf
+                                                                <input type="hidden" name="id" value="{{$facility->id}}">
                                                                 <br><button type="submit" class="btn btn-primary" name="delete_f">Delete</button>
                                                             </form><br>
                                                         </div>
@@ -242,7 +231,7 @@
                                                 </div>
                                             </div>
                                             <!-- Small modal modal end -->
-                                            <?php } ?>
+                                            @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -254,7 +243,7 @@
 
                     <!-- Large modal start -->
                     <!-- Large modal -->
-                    <div class="newissue modal fade bd-example-modal-lg">
+                    <div class="newfacility modal fade bd-example-modal-lg">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -287,12 +276,9 @@
                                                         <div class="form-gp">                                                            
                                                             <select name="state" id="state" class="custom-select border-0 pr-3" required>
                                                                 <option value="" selected="">Select State</option>
-                                                                <?php
-                                                                $fc = mysqli_query($conn, "SELECT * from state");
-                                                                while ($fc_row = mysqli_fetch_array($fc)) {
-                                                                    echo '<option value="'.$fc_row['id'].'">'.$fc_row['state_name'].'</option>';
-                                                                }
-                                                                ?>
+                                                                @foreach($states as $state)
+                                                                    <option value="{{$facility->id}}">{{$facility->state_name}}</option>
+                                                                @endforeach
                                                             </select>
                                                         </div>
                                                         <div class="form-gp">
@@ -352,6 +338,14 @@
     </div>
     @endsection
     @section('js')
+    <!-- Start datatable js -->
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap.min.js"></script>
+    <script type="text/javascript">
+        var dataTable = $('#dataTable2').DataTable({});
+    </script>
     <script type="text/javascript">
         $(document).ready(function(){
             
@@ -365,7 +359,6 @@
                 var serverip = $('#serverip').val();
                 var online_url = $('#online_url').val();
                 var email = $('#email').val();
-                console.log(state);
                 if (name == '' || code == '' || cperson == '' || cpersonp == '' || state == '') {
                     $('#formErr').html('<span class="alert alert-danger">Please Fill Required Fields</span>');
                     return false;
@@ -374,19 +367,21 @@
                     $('#formErr').html('');
 
                     var datastring = 'code='+code;
-
+                    $.ajaxSetup({
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                        });
                     $.ajax({
-                        url: 'ajax/code.php',
+                        url: '/checkFacility',
                         method: 'post',
                         data: datastring,
                         success: function(msg) {
                             if (msg == 1) {
-                                $('#errfc').html('<div class="alert alert-danger"><p>Facility Exists</p></div>');
-
+                                $('#formErr').html('<div class="alert alert-danger"><p>Facility Exists</p></div>');
                                 return false;
-
                             } else {
-                                $('#errem').html('');
+                                $('#formErr').html('');
                                 registerFinal();
                             }
                         }
@@ -395,16 +390,20 @@
                     var datastringg = 'state='+state+'&name='+name+'&code='+code+'&cperson='+cperson+'&cpersonp='+cpersonp+'&serverip='+serverip+'&online_url='+online_url+'&email='+email;
 
                     function registerFinal() {
-
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
                     $.ajax({
-                        url: 'ajax/fac.php',
+                        url: '/newFacility',
                         method: 'post',
                         data: datastringg,
                         success: function(msg) {
                             if (msg == 1) {
-                                window.location.replace('facility.php');
+                                window.location.replace('/facility');
                             }else {
-                                $('#loaderxy').html('<span class="alert alert-danger">Something Went wrong. Please try again</span>');
+                                $('#formerr').html('<span class="alert alert-danger">Something Went wrong. Please try again</span>');
                             }
                         }
                     });
@@ -413,9 +412,5 @@
         });
     });
     </script>
-    
-    <script type="text/javascript">
-        var dataTable = $('#dataTable2').DataTable({});
-    </script>
-
+@endsection
 </html>

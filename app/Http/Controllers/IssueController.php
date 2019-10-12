@@ -26,7 +26,7 @@ class IssueController extends Controller
         
         $query = DB::table('issue')
                 ->join('user', 'user.id', '=', 'issue.support_officer')
-                ->join('facility', 'facility.id', '=', 'issue.facility');
+                ->join('facility', 'facility.code', '=', 'issue.facility');
 
         if (isset($request->datetimepicker1) && isset($request->datetimepicker2)){
             $query->whereBetween('filter_issue_date', [$request->datetimepicker1, $request->datetimepicker2]);
@@ -43,6 +43,12 @@ class IssueController extends Controller
         if($request->logger != '') $query->where('support_officer', $request->logger);
 
         if($request->view != '')$query->whereIn('type', [$request->view, 2]);
+
+        if($request->search_table != '')$query->where('issue', 'like', $request->search_table)
+                                              ->orWhere('facility', 'like', $request->search_table)
+                                              ->orWhere('issue_id', 'like', $request->search_table)
+                                              ->orWhere('priority', 'like', $request->search_table)
+                                              ->orWhere('issue_type', 'like', $request->search_table);
         
         $query1 = $query->get();
         if ($request->length != -1) {

@@ -15,7 +15,7 @@ class CreateUserTable extends Migration
     {
         Schema::create('user', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('user_role', 15);
+            $table->string('user_role', 15)->nullable();
             $table->string('user_name', 50);
             $table->string('email', 70);
             $table->string('phone', 15);
@@ -23,10 +23,10 @@ class CreateUserTable extends Migration
             $table->dateTime('date_added');
             $table->string('online_status', 50)->nullable();
             $table->tinyInteger('status');
-            $table->tinyInteger('online');
+            $table->tinyInteger('online')->nullable();
             $table->tinyInteger('user_type');
             $table->tinyInteger('state_id');
-            $table->tinyInteger('facility_id');
+            $table->tinyInteger('facility_id')->nullable();
             $table->string('password_token')->nullable();            
         });
     }

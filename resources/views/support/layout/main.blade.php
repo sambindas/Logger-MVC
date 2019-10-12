@@ -86,9 +86,8 @@
                                 <a href="javascript:void(0)" aria-expanded="true"><i class="ti-pie-chart"></i><span>Manage</span></a>
                                 <ul class="collapse">
                                     <li><a href="/facility">Facilities</a></li>
-                                    <li><a href="/state">States</a></li>
                                     <li><a href="/user">Users</a></li>
-                                    <li><a href="/portal">Client Credentials</a></li>
+                                    <li><a href="/client">Client Credentials</a></li>
                                 </ul>
                             </li>
                         </ul>

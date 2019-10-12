@@ -27,11 +27,11 @@ class CreateActivityTable extends Migration
             $table->string('year', 20);
             $table->string('day', 20);
             $table->string('visit_type', 100);
-            $table->string('comments', 200)->nullable();;
-            $table->string('unplanned', 555)->nullable();;
-            $table->string('planned', 555)->nullable();;
-            $table->string('unresolved', 555)->nullable();;
-            $table->string('issues', 555)->nullable();;
+            $table->string('comments', 200)->nullable();
+            $table->string('unplanned', 555)->nullable();
+            $table->string('planned', 555)->nullable();
+            $table->string('unresolved', 555)->nullable();
+            $table->string('issues', 555)->nullable();
         });
     }
 
