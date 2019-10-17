@@ -10,9 +10,6 @@ use PHPMailer\PHPMailer\Exception;
 class IssueController extends Controller
 {
     public function Create (Request $request) {
-        if (!$request->session()->has('id')) {
-            return view('/support/auth/login');
-        }
         $state_id = $request->session()->get('state_id');
         $facilities = DB::table('facility')->where('state_id', $state_id)->get()->toArray();
         

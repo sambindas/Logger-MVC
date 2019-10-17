@@ -10,80 +10,83 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-//Dashboard
-Route::get('/', 'DashboardController@Dashboard');
-
-Route::post('/', 'DashboardController@Dashboard');
-
-Route::get('/incident/media/{id}', 'DashboardController@Media');
-
-Route::get('/incident/edit/{id}', 'DashboardController@Edit');
 
 //Auth
 Route::post('/login', 'LoginController@Login');
+Route::group(['middleware' => ['session']], function (){
 
-//Issue
+    //Dashboard
+    Route::get('/', 'DashboardController@Dashboard');
 
-Route::post('/submitIssue', 'IssueController@Submit');
+    Route::post('/', 'DashboardController@Dashboard');
 
-Route::post('/issueType', 'IssueController@issueType');
+    Route::get('/incident/media/{id}', 'DashboardController@Media');
 
-Route::post('/issueLevel', 'IssueController@issueLevel');
+    Route::get('/incident/edit/{id}', 'DashboardController@Edit');
 
-Route::get('/incident/new', 'IssueController@Create');
+    //Issue
 
-Route::post('/fetchTable', 'IssueController@FetchTable');
+    Route::post('/submitIssue', 'IssueController@Submit');
 
-Route::post('/incident/media/ProcessMediaUpload', 'IssueController@UploadMedia');
+    Route::post('/issueType', 'IssueController@issueType');
 
-Route::post('/updateCaption', 'IssueController@updateCaption');
+    Route::post('/issueLevel', 'IssueController@issueLevel');
 
-Route::post('/deleteMedia', 'IssueController@deleteMedia');
+    Route::get('/incident/new', 'IssueController@Create');
 
-Route::post('/incident/edit', 'IssueController@Edit');
+    Route::post('/fetchTable', 'IssueController@FetchTable');
 
-//Issue Modal Actions
+    Route::post('/incident/media/ProcessMediaUpload', 'IssueController@UploadMedia');
 
-Route::post('/processAction', 'IssueController@ProcessAction');
+    Route::post('/updateCaption', 'IssueController@updateCaption');
 
-//Facility
+    Route::post('/deleteMedia', 'IssueController@deleteMedia');
 
-Route::get('/facility', 'FacilityController@Dashboard');
+    Route::post('/incident/edit', 'IssueController@Edit');
 
-Route::post('/checkFacility', 'FacilityController@CheckFacility');
+    //Issue Modal Actions
 
-Route::post('/newFacility', 'FacilityController@Create');
+    Route::post('/processAction', 'IssueController@ProcessAction');
 
-Route::post('/editFacility', 'FacilityController@Edit');
+    //Facility
 
-Route::post('/deleteFacility', 'FacilityController@Delete');
+    Route::get('/facility', 'FacilityController@Dashboard');
 
-Route::post('/editState', 'FacilityController@ChangeState');
+    Route::post('/checkFacility', 'FacilityController@CheckFacility');
 
-//User
+    Route::post('/newFacility', 'FacilityController@Create');
 
-Route::get('/user', 'UserController@Dashboard');
+    Route::post('/editFacility', 'FacilityController@Edit');
 
-Route::post('/checkEmail', 'UserController@CheckEmail');
+    Route::post('/deleteFacility', 'FacilityController@Delete');
 
-Route::post('/register', 'UserController@Register');
+    Route::post('/editState', 'FacilityController@ChangeState');
 
-Route::post('/deactivate', 'UserController@Deactivate');
+    //User
 
-Route::post('/activate', 'UserController@Activate');
+    Route::get('/user', 'UserController@Dashboard');
 
-//Client
+    Route::post('/checkEmail', 'UserController@CheckEmail');
 
-Route::get('/client', 'UserController@ClientDashboard');
+    Route::post('/register', 'UserController@Register');
 
-Route::get('/getFacility', 'UserController@GetFacility');
+    Route::post('/deactivate', 'UserController@Deactivate');
 
-Route::post('/register', 'UserController@Register');
+    Route::post('/activate', 'UserController@Activate');
 
-Route::post('/deactivate', 'UserController@Deactivate');
+    //Client
 
-Route::post('/activate', 'UserController@Activate');
+    Route::get('/client', 'UserController@ClientDashboard');
 
-//Analytics
+    Route::get('/getFacility', 'UserController@GetFacility');
 
-Route::get('/charts', 'AnalyticsController@Dashboard');
+    Route::post('/register', 'UserController@Register');
+
+    Route::post('/deactivate', 'UserController@Deactivate');
+
+    Route::post('/activate', 'UserController@Activate');
+
+    //Analytics
+
+    Route::get('/charts', 'AnalyticsController@Dashboard');
+});

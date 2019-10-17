@@ -94,7 +94,7 @@
                                                         </div>
                                                         <div class="modal-body">
                                                             <p>Are You Sure?</p>
-                                                            <form method="post" action="/activate">
+                                                            <form method="post" action="{{route('activate')}}">
                                                             @csrf
                                                                 <input type="hidden" name="id" value="{{$user->id}}">
                                                                 <br><button type="submit" class="btn btn-primary" name="delete_f">Activate</button>
@@ -117,7 +117,7 @@
                                                         </div>
                                                         <div class="modal-body">
                                                             <p>Are You Sure?</p>
-                                                            <form method="post" action="/deactivate">
+                                                            <form method="post" action="{{route('deactivate')}}">
                                                             @csrf
                                                                 <input type="hidden" name="id" value="{{$user->id}}">
                                                                 <br><button type="submit" class="btn btn-primary" name="delete_f">Deactivate</button>
@@ -309,7 +309,7 @@
                         }
                     });
                     $.ajax({
-                        url: '/checkEmail',
+                        url: '{{route("checkEmail")}}',
                         method: 'post',
                         data: datastring,
                         success: function(msg) {
@@ -332,7 +332,7 @@
                     }
                     });
                     $.ajax({
-                        url: '/register',
+                        url: '{{("register")}}',
                         method: 'post',
                         data: datastring,
                         success: function(msg) {
@@ -360,7 +360,7 @@
             });
             $.ajax({
                 type:'GET',
-                url:'/getFacility',
+                url:'{{route("getFacility")}}',
                 data:'state_id='+state_id,
                 success:function(html){
                     $('#fcode').html(html);

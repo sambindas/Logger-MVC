@@ -37,6 +37,10 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
 
+        'session' => [
+            \App\Http\Middleware\CheckSession::class,
+        ],
+
         'api' => [
             'throttle:60,1',
             'bindings',
@@ -60,6 +64,7 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'checkSession' => \App\Http\Middleware\CheckSession::class,
     ];
 
     /**
