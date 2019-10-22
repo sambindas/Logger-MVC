@@ -13,6 +13,7 @@
 
 //Auth
 Route::post('/login', 'LoginController@Login');
+Route::get('/logout', 'LoginController@logout');
 Route::group(['middleware' => ['session']], function (){
 
     //Dashboard
@@ -89,4 +90,23 @@ Route::group(['middleware' => ['session']], function (){
     //Analytics
 
     Route::get('/charts', 'AnalyticsController@Dashboard');
+
+    #Activity
+    Route::get('/activity/new', 'ActivityController@new');
+    
+    Route::get('/activity/edit/{id}', 'ActivityController@edit');
+
+    Route::get('activity/delete/{id}', 'ActivityController@delete');
+
+    Route::get('/activity', 'ActivityController@Dashboard');
+
+    Route::get('/activity/view/{week}/{month}/{year}', 'ActivityController@ViewActivity');
+
+    Route::post('/activity/summary/submit', 'ActivityController@SubmitSummary');
+
+    Route::get('/activity/summary/add/{id}', 'ActivityController@Summary');
+
+    Route::get('/fetchActivity', 'ActivityController@FetchActivity');
+    
+    Route::post('/activity/submit', 'ActivityController@Submit');
 });

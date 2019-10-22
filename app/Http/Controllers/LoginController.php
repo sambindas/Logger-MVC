@@ -22,7 +22,11 @@ class LoginController extends Controller
                 $request->session()->put('logged_in', 'support');
                 $request->session()->put('email', $users[0]->email);
                 $request->session()->put('state_id', $users[0]->state_id);
-                echo 'support';
+                if ($request->session()->has('redirectPath')){
+                    echo session()->get('redirectPath');
+                } else {
+                    echo '/';
+                }
             } else {
                 $request->session()->put('id', $users[0]->id);
                 $request->session()->put('name', $users[0]->user_name);
@@ -33,5 +37,10 @@ class LoginController extends Controller
                 echo 'client';
             }
         }
+    }
+
+    public function logout (Request $request) {
+        $request->session()->flush();
+        return redirect('/');
     }
 }

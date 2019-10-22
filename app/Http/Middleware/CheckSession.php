@@ -16,10 +16,11 @@ class CheckSession
      */
     public function handle($request, Closure $next)
     {
-        if(!$request->session()->get('state_id')){
+        if(!$request->session()->has('state_id')){
             //if user not authenticated get get requested uri
+            session()->forget('redirectPath');
             session()->put('redirectPath',$request->path());
-            return view('/support/auth/login');
+            return response()->view('/support/auth/login');
         }
         return $next($request);
     }

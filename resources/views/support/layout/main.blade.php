@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{asset('css/default-css.css')}}">
     <link rel="stylesheet" href="{{asset('css/styles.css')}}">
     <link rel="stylesheet" href="{{asset('css/responsive.css')}}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6/css/select2.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.7/css/select2.min.css" rel="stylesheet"/>
     <!-- Start datatable css -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css">
@@ -45,6 +45,16 @@
         }
         .dropdown-item:hover {
             background-color: #6394e2;
+        }
+        .selecttwo {
+            height: 2rem;
+            max-height: 2rem;
+            overflow: auto;
+        }
+
+        html,
+        body {
+        height: 100%;
         }
     </style>
     <style type="text/css">
@@ -77,9 +87,9 @@
                             <li class="active">
                                 <a href="javascript:void(0)" aria-expanded="true"><i class="ti-dashboard"></i><span>Home</span></a>
                                 <ul class="collapse">
-                                    <li class="active"><a href="/">Incident Log</a></li>
-                                    <li><a href="/charts">Analytics</a></li>
-                                    <li><a href="/activity">Activity Log</a></li>
+                                    <li class="active"><a href="{{url('/')}}">Incident Log</a></li>
+                                    <li><a href="{{url('/charts')}}">Analytics</a></li>
+                                    <li><a href="{{url('/activity')}}">Activity Log</a></li>
                                 </ul>
                             </li>
                             <li>
@@ -158,7 +168,12 @@
     
     <script src="{{asset('datetimepicker/jquery.datetimepicker.full.min.js')}}"></script>
     <script src="{{asset('datetimepicker/jquery.datetimepicker.js')}}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.7/js/select2.min.js"></script>
+    <script>
+    $(document).ready(function() {
+    $('.selecttwo').select2();
+    });
+    </script>
     <!-- MDB core JavaScript -->
     <script type="text/javascript" src="{{asset('js/mdb.min.js')}}"></script>
 @yield('js')

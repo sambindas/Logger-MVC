@@ -33,7 +33,7 @@
                                 <a class="dropdown-item" href="settings.php">Settings</a>
                                 <a class="dropdown-item" href="changepassword.php">Change Password</a>
                                 <a class="dropdown-item" href="help.php">Help</a>
-                                <a class="dropdown-item" href="logout.php">Log Out</a>
+                                <a class="dropdown-item" href="{{url('/logout')}}">Log Out</a>
                             </div>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                                     </div> &nbsp;&nbsp; &nbsp;&nbsp;
                                     <div class="col-sm-2">
                                         <label>Incident Status</label>
-                                        <select class="form-control" id="filter_status">
+                                        <select class="form-control selecttwo" id="filter_status">
                                             <option value="">Select One</option>
                                             <option value="0">Open / Unassigned</option>
                                             <option value="8">Open / Assigned</option>
@@ -105,10 +105,19 @@
                                     </div>&nbsp;&nbsp;
                                     <div class="col-sm-2">
                                         <label>Incident Logger</label>
-                                        <select class="form-control" id="logger">
+                                        <select class="form-control selecttwo" id="logger">
                                             <option value="">Select One</option>
                                             @foreach($users as $user)
                                             <option value="{{$user->id}}">{{$user->user_name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>&nbsp;&nbsp;
+                                    <div class="col-sm-2">
+                                        <label>Facility</label>
+                                        <select class="form-control selecttwo" id="facility">
+                                            <option value="">All</option>
+                                            @foreach($facilities as $facility)
+                                            <option value="{{$facility->code}}">{{$facility->name}}</option>
                                             @endforeach
                                         </select>
                                     </div>&nbsp;&nbsp;
@@ -274,20 +283,23 @@
         fill_datatable();
       
     
-      function fill_datatable(filter_status = '', filter_assign = '', logger = '', view = 0, datetimepicker1 = '', datetimepicker2 = '', search_table = '')
+      function fill_datatable(filter_status = '', filter_assign = '', logger = '', view = 0, facility='', datetimepicker1 = '', datetimepicker2 = '', search_table = '')
       {
         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
        $('#dataTable2').DataTable({
         
         "processing" : true,
         "pageLength": 25,
+        "columnDefs": [
+            { "searchable": true, "targets": 0 }
+          ],
         "serverSide" : true,
-        "paging": true,
         "createdRow": function(row, data, index) {
+
             switch (data[8]) {
                 case 0: 
                     $(row).css('background-color', 'white');
@@ -313,7 +325,7 @@
                 case 7:
                     $(row).css('background-color', '#f95454');
                     break;
-                case 8:
+                case 8: 
                     $(row).css('background-color', '#f6f6ad');
                     break;
                 case 9: 
@@ -329,10 +341,10 @@
         "order" : [],
         "searching" : false,
         "ajax" : {
-         url:"/fetchTable",
+         url:"{{url('/fetchTable')}}",
          type:"POST",
          data:{
-          filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
+          filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, facility:facility, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
          }
         },
         "columnDefs": [
@@ -354,6 +366,7 @@
             var datetimepicker2 = $('#datetimepicker2').val();
             var logger = $('#logger').val();
             var view = $('#view').val();
+            var facility = $('#facility').val();
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -367,7 +380,7 @@
                 ],
                 "serverSide" : true,
                 "createdRow": function(row, data, index) {
-                    
+
                     switch (data[8]) {
                         case 0: 
                             $(row).css('background-color', 'white');
@@ -409,10 +422,10 @@
                 "order" : [],
                 "searching" : false,
                 "ajax" : {
-                url:"/fetchTable",
+                url:"{{url('/fetchTable')}}",
                 type:"POST",
                 data:{
-                filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
+                filter_status:filter_status, logger:logger, view:view, filter_assign:filter_assign, facility:facility, datetimepicker1:datetimepicker1, datetimepicker2:datetimepicker2, search_table:search_table
                 }
                 },
                 "columnDefs": [
@@ -431,11 +444,12 @@
         var datetimepicker2 = $('#datetimepicker2').val();
         var logger = $('#logger').val();
         var view = $('#view').val();
+        var facility = $('#facility').val();
         
         if(search_table != '')
            {
             $('#dataTable2').DataTable().destroy();
-            fill_datatable(filter_status, filter_assign, logger, view, datetimepicker1, datetimepicker2, search_table);
+            fill_datatable(filter_status, filter_assign, logger, view, facility, datetimepicker1, datetimepicker2, search_table);
            }
            else
            {
@@ -447,11 +461,12 @@
        var filter_assign = $('#filter_assign').val();
        var logger = $('#logger').val();
        var view = $('#view').val();
+       var facility = $('#facility').val();
 
        if(filter_status != '' || filter_assign != '' || logger !='' || view != '')
        {
         $('#dataTable2').DataTable().destroy();
-        fill_datatable(filter_status, filter_assign, logger, view);
+        fill_datatable(filter_status, filter_assign, logger, view, facility);
        }
        else
        {
@@ -465,11 +480,12 @@
        var filter_assign = $('#filter_assign').val();
        var logger = $('#logger').val();
        var view = $('#view').val();
+       var facility = $('#facility').val();
 
        if(filter_status != '' || filter_assign != '' || logger !='' || view !='')
        {
         $('#dataTable2').DataTable().destroy();
-        fill_datatable(filter_status, filter_assign, logger, view);
+        fill_datatable(filter_status, filter_assign, logger, view, facility);
        }
        else
        {
@@ -483,11 +499,12 @@
        var filter_assign = $('#filter_assign').val();
        var logger = $('#logger').val();
        var view = $('#view').val();
+       var facility = $('#facility').val();
 
        if(filter_status != '' || filter_assign != '' || logger !='' || view != '')
        {
         $('#dataTable2').DataTable().destroy();
-        fill_datatable(filter_status, filter_assign, logger, view);
+        fill_datatable(filter_status, filter_assign, logger, view, facility);
        }
        else
        {
@@ -501,11 +518,31 @@
        var filter_assign = $('#filter_assign').val();
        var logger = $('#logger').val();
        var view = $('#view').val();
+       var facility = $('#facility').val();
 
        if(filter_status != '' || filter_assign != '' || logger !='' || view !='')
        {
         $('#dataTable2').DataTable().destroy();
-        fill_datatable(filter_status, filter_assign, logger, view);
+        fill_datatable(filter_status, filter_assign, logger, view, facility);
+       }
+       else
+       {
+        $('#dataTable2').DataTable().destroy();
+        fill_datatable();
+       }
+      });
+
+      $(document).on("change", "#facility", function(){
+       var filter_status = $('#filter_status').val();
+       var filter_assign = $('#filter_assign').val();
+       var logger = $('#logger').val();
+       var view = $('#view').val();
+       var facility = $('#facility').val();
+
+       if(filter_status != '' || filter_assign != '' || logger !='' || view !='')
+       {
+        $('#dataTable2').DataTable().destroy();
+        fill_datatable(filter_status, filter_assign, logger, view, facility);
        }
        else
        {
@@ -521,11 +558,12 @@
        var datetimepicker2 = $('#datetimepicker2').val();
        var logger = $('#logger').val();
        var view = $('#view').val();
+       var facility = $('#facility').val();
 
        if(filter_status != '' || filter_assign != '' || datetimepicker1 != '')
        {
         $('#dataTable2').DataTable().destroy();
-        fill_datatable(filter_status, filter_assign, logger, view, datetimepicker1, datetimepicker2);
+        fill_datatable(filter_status, filter_assign, logger, view, facility, datetimepicker1, datetimepicker2);
        }
        else
        {
@@ -533,7 +571,7 @@
         fill_datatable();
        }
       });
-    
+      
       
      });
      

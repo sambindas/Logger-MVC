@@ -41,6 +41,8 @@ class IssueController extends Controller
 
         if($request->view != '')$query->whereIn('type', [$request->view, 2]);
 
+        if($request->facility != '')$query->where('facility', $request->facility);
+
         if($request->search_table != '')$query->where('issue', 'like', $request->search_table)
                                               ->orWhere('facility', 'like', $request->search_table)
                                               ->orWhere('issue_id', 'like', $request->search_table)
@@ -795,7 +797,7 @@ class IssueController extends Controller
                 }
             $subArray = array();
             $subArray[] = $row->issue_id;
-            $subArray[] = '<div title="'.$row->name.'">'.$row->code.'</div>';
+            $subArray[] = '<div title="'.$row->name.'">'.$row->name.'</div>';
             $subArray[] = $row->issue_type;
             $subArray[] = '<div title="Asigned To: '.$assignedToName[0]->user_name.'">'.$row->issue.'</div>';
             $subArray[] = $row->priority;

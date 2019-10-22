@@ -74,16 +74,13 @@
                     }
                 });
                 $.ajax({
-                    url: '{{route("login")}}',
+                    url: "{{url('/login')}}",
                     method: 'post',
                     data: datastring,
                     success: function(msg){
-                        console.log(msg)
-                        if (msg == 'support') {
-                            window.location.replace('{{route("/")}}');
-                        } else if (msg == 'client') {
-                            window.location.replace('{{route("/clientIndex")}}');
-                        } else {
+                        if (msg) {
+                            window.location.replace(msg);
+                        } else if (msg == 0) {
                             $('#formErr').html('<span class="alert alert-danger">Authentication Failed!</span>');
                             $('#form_submit').fadeIn();
                             $('#loade').html('');
